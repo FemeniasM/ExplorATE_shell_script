@@ -1,0 +1,43 @@
+#!/bin/bash
+BINDIR=$(dirname `readlink -f $0`) && export BINDIR=${BINDIR}/bin
+green=`tput setaf 2`
+yellow=`tput setaf 3`
+reset=`tput sgr0`
+
+# version #
+export ExplorATE_VERSION=0.0.1
+
+# usage #
+usage (){
+echo "${green}=============================
+${yellow}|||       ExplorATE       |||
+${green}=============================${reset}"
+echo "Version ${ExplorATE_VERSION}"
+
+echo "Usage:
+ExplorATE ${yellow}[mode] ${green}[flags]${reset}
+modes:"
+echo -e "\tExplorATE ${yellow}mo${reset} <model organisms analysis>"
+echo -e "\tExplorATE ${yellow}nmo${reset} <run the pipeline for non-model organisms from user generated files>"
+echo -e "\tExplorATE ${yellow}nmo_in${reset} <generates input files only (e.g. to use in R)>"
+echo -e "\tExplorATE ${yellow}nmo_all${reset} <run all pipeline for non-model organisms (generating intermediate annotation files)>"
+echo "run ExplorATE ${yellow}[mode]${reset} -h to see flags for each mode"
+}
+
+# run #
+if [ $# -lt 1 ];then
+	usage
+	exit 1
+fi
+case ${1} in
+	mo)
+		shift && bash ${BINDIR}/ExplorATE_mo.sh "$@";;
+	nmo)
+		shift && bash ${BINDIR}/ExplorATE_nmo_with_user_inputs.sh "$@";;
+	nmo_in)
+		shift && bash ${BINDIR}/ExplorATE_nmo_generate_inputs.sh "$@";;
+	nmo_all)
+		shift && bash ${BINDIR}/ExplorATE_nmo_all.sh "$@";;
+	*)
+		usage;;
+esac
