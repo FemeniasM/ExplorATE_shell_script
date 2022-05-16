@@ -273,7 +273,7 @@ awk -F'::' '{print $1}' TranscriptsID.txt > targetTEs_ids.txt
 
     if [[ $annot_by == 'transcripts' ]];then
     echo -e "[$(printf '%(%F %T)T\n')][INFO] target TEs annotation by transcripts"
-    seqkit grep NoGenes.fa -w 0 -f  targetTEs_ids.txt > targetTEs.fa
+    $seqkit grep NoGenes.fa -w 0 -f  targetTEs_ids.txt > targetTEs.fa
     grep '>' targetTEs.fa | sed 's/>//g' | awk '{print $1}' >targetTEs_tr_ids_noGenes.txt
     grep -w -f targetTEs_tr_ids_noGenes.txt TranscriptsID.txt | awk '{gsub("::",";", $1); print $1}' > references.csv
     else
