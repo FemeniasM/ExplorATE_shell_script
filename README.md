@@ -40,6 +40,10 @@ If the reference genome is not available, ExplorATE uses the repeats identified 
 Target TEs can be defined at the fragment level or at the transcript level. At the fragment level, all non-co-transcribed TEs are used as target. At the transcript level, a rule similar to Wicker's is used to establish the identity of the transcript. The algorithm uses this criterion to assign target transcripts based on the percentage of identity for a class/family of TEs (calculated as 100 - the percentage of divergence), the percentage for each TE class/family in the transcript (calculated as the ratio between the TE length and the transcript length), and the minimum transcript length. For example, ‘80-80-80’ Wicker-like rule is a selection criterion where a transcript is annotated as "target" f it contains a TE class/family with percentage of identity >80%, this TE class/family represents >80% of the transcript length, and the transcript is at least 80bp in length.
 ExplorATE creates files for Salmon execution with Selective Alignment algorithm. The counts estimated by Salmon can be imported into R with specific functions from the R package [ExplorATE](https://github.com/FemeniasM/ExplorATEproject).
 
+## Citation
+
+Please cite [ExplorATE: a new pipeline to explore active transposable elements from RNA-seq data](https://doi.org/10.1093/bioinformatics/btac354), *Bioinformatics*, Volume 38, Issue 13, 2022, Pages 3361–3366.
+
 ### How to use
 ____________________
 This shell script provides four execution modes: one (`mo`) for model organisms with a reference genome and three (`nmo`,`nmo_in`,`nmo_all`) for non-model organisms as described below. To run the program, the user must define the mode and the flags corresponding to each mode: 
