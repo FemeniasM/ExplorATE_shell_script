@@ -249,7 +249,7 @@ if [[ $lib_format == 'se' ]];then
     done
 else 
  if [[ $lib_format == 'pe' ]]; then
-    for fn in $lib_folder/*R1*; do
+    for fn in $lib_folder/*_R1*; do
         if [[ (${fn#*.} == "fastq.gz") || (${fn#*.} == "fq.gz") || (${fn#*.} == "fastq") || (${fn#*.} == "fq") ]]; then
          echo "[$(printf '%(%F %T)T\n')][INFO] $fn: extension format ok..."
             sample_name=$(basename ${fn} | sed 's/.fastq.gz\|.fq.gz\|.fastq\|.fq//g')
