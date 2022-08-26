@@ -313,7 +313,7 @@ if [[ $lib_format == 'se' ]];then
     done
 else 
  if [[ $lib_format == 'pe' ]]; then
-    for fn in $lib_folder/*R1*; do
+    for fn in $lib_folder/*_R1*; do
         if [[ (${fn#*.} == "fastq.gz") || (${fn#*.} == "fq.gz") || (${fn#*.} == "fastq") || (${fn#*.} == "fq") ]]; then
          sample_name=$(basename ${fn} | sed 's/_R1.fastq.gz\|_R1.fq.gz\|_R1.fastq\|_R1.fq//g')
             if ls $lib_folder/$sample_name* | grep -q -e "_R1" -e "_R2"; then
