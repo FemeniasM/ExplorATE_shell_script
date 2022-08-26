@@ -266,7 +266,7 @@ Resolving overlaps with RM2Bed$
      echo "[$(printf '%(%F %T)T\n')][INFO] intersecting intergenic regions"
     $bedtools intersect -a intergenic.bed -b RMgen_in_intergnic.bed -sorted > RMGen.bed
     awk '{print $1$2$3}' RMGen.bed > RMref.txt
-    awk '{print $4}' RMgen_merged.bed | awk -F":" -v OFS=";" 'BEGIN{while((getline<"RMref.txt")>0)} {print $1,$2,$3}' > references.csv
+    awk '{print $4}' RMgen_merged.bed | awk -F":" -v OFS=";" 'BEGIN{while((getline<"RMref.txt")>0);} {print $1,$2,$3}' > references.csv
     awk -v OFS="\t" '{print $1, $2, $3, $1$2$3}' RMGen.bed | $bedtools merge -c 4 -o first | sort -k1,1 -k2,2n > RMGen_merged.bed
     echo "[$(printf '%(%F %T)T\n')][INFO] Making target TEs fasta"
     $bedtools getfasta -fi $fasta_genome -bed RMGen_merged.bed -nameOnly -fo RM_intergenic.fa
