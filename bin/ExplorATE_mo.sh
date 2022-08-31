@@ -179,6 +179,21 @@ then
     print_usage && exit 1
 fi
 
+bedtools_ver=$($bedtools --version | awk -F" v" '{print $2}')
+salmon_ver=$($salmon_path --version | awk -F" " '{print $2}')
+
+if { echo "$bedtools_ver"; echo "2.29.1"; } | sort --version-sort --check=silent; then
+    echo -e "${red}[$(printf '%(%F %T)T\n')][ERROR] ExplorATE requires bedtools version 2.29.1 or later. 
+    You are using betools version $bedtools_ver ${reset}"
+    print_usage && exit 1
+fi
+
+if { echo "$salmon_ver"; echo "1.4.0"; } | sort --version-sort --check=silent; then
+    echo -e "${red}[$(printf '%(%F %T)T\n')][ERROR] ExplorATE requires bedtools version 1.4.0 or later. 
+    You are using Salmon version $salmon_ver ${reset}"
+    print_usage && exit 1
+fi
+
 mkdir -p $outfolder/temp
 cd $outfolder/temp
 
