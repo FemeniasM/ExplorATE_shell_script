@@ -182,13 +182,13 @@ fi
 bedtools_ver=$($bedtools --version | awk -F" v" '{print $2}')
 salmon_ver=$($salmon_path --version | awk -F" " '{print $2}')
 
-if { echo "$bedtools_ver"; echo "2.29.1"; } | sort --version-sort --check=silent; then
+if { echo "$bedtools_ver"; echo "2.29.0"; } | sort --version-sort --check=silent; then
     echo -e "${red}[$(printf '%(%F %T)T\n')][ERROR] ExplorATE requires bedtools version 2.29.1 or later. 
     You are using betools version $bedtools_ver ${reset}"
     print_usage && exit 1
 fi
 
-if { echo "$salmon_ver"; echo "1.4.0"; } | sort --version-sort --check=silent; then
+if { echo "$salmon_ver"; echo "1.3.0"; } | sort --version-sort --check=silent; then
     echo -e "${red}[$(printf '%(%F %T)T\n')][ERROR] ExplorATE requires bedtools version 1.4.0 or later. 
     You are using Salmon version $salmon_ver ${reset}"
     print_usage && exit 1
@@ -207,103 +207,123 @@ echo "[$(printf '%(%F %T)T\n')][INFO] recording chromosome lengths..."
 
 $seqkit fx2tab --length --name -i $fasta_genome | sort -k1,1 -k2,2n > genome_len.bed
 
-echo "[$(printf '%(%F %T)T\n')][INFO] Extracting introns, UTRs and intergenic regions"
-
-awk -F '\t' '($3=="gene") {printf("%s\t%d\t%s\n",$1,int($4)-1,$5);}' $gtf_genome | sort -t $'\t' -k1,1 -k2,2n | $bedtools merge > genes.bed
-
-awk -F '\t' '($3=="UTR" || $3=="3UTR" || $3=="5UTR") {printf("%s\t%d\t%s\n",$1,int($4)-1,$5);}' $gtf_genome | sort -t $'\t' -k1,1 -k2,2n | $bedtools merge > UTR.bed
-
-awk -F '\t' '($3=="exon") {printf("%s\t%d\t%s\n",$1,int($4)-1,$5);}' $gtf_genome | sort -t $'\t' -k1,1 -k2,2n | $bedtools merge > exon.bed
-
-$bedtools complement -i <(cat genes.bed exon.bed UTR.bed | sort -k1,1 -k2,2n | $bedtools merge ) -g genome_len.bed -L > intergenic.bed
-
-$bedtools complement -i <(cat exon.bed UTR.bed intergenic.bed | sort -k1,1 -k2,2n | $bedtools merge ) -g  genome_len.bed -L > intron.bed
-
 if [[ -e $fasta_trme ]]; then
 echo "
 -------------------------------------------
 Searching TE targets based in transcriptome
 -------------------------------------------"
         if [[ $ovres == 'higher_score' || $ovres == 'longer_element' || $ovres == 'lower_divergence' ]]; then
+        
 echo -e "${yellow}
 Resolving overlaps with RM2Bed
 ==============================${reset}"
-            python3 $RM2Bed --out_dir . --out_prefix RM_ovres --sort_criterion 'size' --ovlp_resolution $ovres $RM_trme $al
-            grep -w -v "Unknown\\|rRNA\\|Satellite\\|Simple_repeat\\|Low_complexity\\|RNA\\|cRNA\\|snRNA\\|srpRNA\\|tRNA\\|Other" RM_ovres_rm.bed \
-            | awk -v OFS='\t' '{print $1, $2, $3, $1":"$2":"$3":"$4"/"$7"/"$8}' | sort -k1,1 -k2,2n | $bedtools merge -c 4 -o first > RMtrme.bed
+        
+        python3 $RM2Bed --out_dir . --out_prefix RM_ovres --sort_criterion 'size' --ovlp_resolution $ovres $RM_trme $al
+        
+        grep -w -v "Unknown\\|rRNA\\|Satellite\\|Simple_repeat\\|Low_complexity\\|RNA\\|cRNA\\|snRNA\\|srpRNA\\|tRNA\\|Other" RM_ovres_rm.bed \
+        | awk -v OFS='\t' '{print $1, $2, $3, $1":"$2":"$3":"$4"/"$7"/"$8}' | sort -k1,1 -k2,2n | $bedtools merge -c 4 -o first > RMtrme.bed
+        
         else
+        
         grep -w -v "Unknown\\|rRNA\\|Satellite\\|Simple_repeat\\|Low_complexity\\|RNA\\|cRNA\\|snRNA\\|srpRNA\\|tRNA\\|Other" $RM_trme \
         | awk -v OFS='\t' 'NR>3 {print $5, $6, $7, $5":"$6":"$7":"$10"/"$11}' | sort -k1,1 -k2,2n | $bedtools merge -c 4 -o first > RMtrme.bed
+        
         fi
-    $bedtools getfasta -fi $fasta_trme -bed RMtrme.bed -nameOnly -fo RM_trme.fa
-    $seqkit rmdup -s RM_trme.fa | $seqkit seq -m $kmer -g > tarTEs.fa
-    grep '>' tarTEs.fa | sed 's/>//g' |awk -F":" '{print $0";"$4}' > references.csv
+
+$bedtools getfasta -fi $fasta_trme -bed RMtrme.bed -nameOnly -fo RM_trme.fa
+
+$seqkit rmdup -s RM_trme.fa | $seqkit seq -m $kmer -g > tarTEs.fa
+
+grep '>' tarTEs.fa | sed 's/>//g' |awk -F":" '{print $0";"$4}' > references.csv
 
 echo -e "[$(printf '%(%F %T)T\n')][INFO] ${green} $(grep -c '>' tarTEs.fa) target TEs found based in transcriptome${reset}"
 
 else
+
 echo "
 ------------------------------------
 Searching TE targets based in genome
 ------------------------------------"
-if [ -s intergenic.bed ]; then
-echo "[$(printf '%(%F %T)T\n')][INFO] $(wc -l intergenic.bed) intergenic regions found"
-else
-echo "${red}[$(printf '%(%F %T)T\n')][ERROR] Error: no intergenic regions found${reset}"
-exit 1
-fi
-        if [[ $ovres == 'higher_score' || $ovres == 'longer_element' || $ovres == 'lower_divergence' ]]; then
+
+    if [[ $ovres == 'higher_score' || $ovres == 'longer_element' || $ovres == 'lower_divergence' ]]; then
+    
 echo -e "${yellow}
 Resolving overlaps with RM2Bed$
 ==============================${reset}"
-            python3 $RM2Bed --out_dir . --out_prefix RM_ovres --sort_criterion 'size' --ovlp_resolution $ovres $RM_genome $al
-            echo "Extracting repeats from intergenic regions"
-            grep -w -v "Unknown\\|rRNA\\|Satellite\\|Simple_repeat\\|Low_complexity\\|RNA\\|cRNA\\|snRNA\\|srpRNA\\|tRNA\\|Other" RM_ovres_rm.bed \
-            | awk -v OFS='\t' '{print $1, $2, $3, $1":"$4"/"$7"/"$8}' | sort -k1,1 -k2,2n | $bedtools merge -c 4 -o first > RMgen.bed
-        else
-        echo "[$(printf '%(%F %T)T\n')][INFO] Extracting repeats from intergenic regions"
-        grep -w -v "Unknown\\|rRNA\\|Satellite\\|Simple_repeat\\|Low_complexity\\|RNA\\|cRNA\\|snRNA\\|srpRNA\\|tRNA\\|Other" $RM_genome | awk -v OFS='\t' 'NR>3 {print $5, $6, $7, $5$6$7":"$10":"$11}' | sort -k1,1 -k2,2n > RMgen.bed
-        fi
-        if [[ -e $chrAl ]]; then
-        echo "[$(printf '%(%F %T)T\n')][INFO] homogenizing chromosome names from chromosome alias file"
-        awk '{print $1}' genome_len.bed > ChrNamGen.txt
-        awk '{print $1}' RMgen.bed | sort | uniq > ChrNamRM.txt
-        grep -v -w -f ChrNamRM.txt ChrNamGen.txt > NamesNoMatch.txt
-        grep -w -f NamesNoMatch.txt $chrAl | awk '{print $2, $1}' > chromAlias_noMatch.txt
-        cat RMgen.bed | sed -f <(printf 's/%s/%s/g\n' $(<chromAlias_noMatch.txt)) > RM_gen.bed
-        rm *.txt
-        else
-        mv RMgen.bed RM_gen.bed
-        fi
-    $bedtools merge -c 4 -o first -i RM_gen.bed | sort -k1,1 -k2,2n > RMgen_merged.bed
-    awk '{print $1}' intergenic.bed | sort | uniq > RMchrom_in_intergenic.txt
-    grep -w -f RMchrom_in_intergenic.txt RMgen_merged.bed > RMgen_in_intergnic.bed
-     echo "[$(printf '%(%F %T)T\n')][INFO] intersecting intergenic regions"
-    $bedtools intersect -a intergenic.bed -b RMgen_in_intergnic.bed -sorted > RMGen.bed
-    awk '{print $1$2$3}' RMGen.bed > RMref.txt
-    awk '{print $4}' RMgen_merged.bed | awk -F":" -v OFS=";" 'BEGIN{while((getline<"RMref.txt")>0);} {print $1,$2,$3}' > references.csv
-    awk -v OFS="\t" '{print $1, $2, $3, $1$2$3}' RMGen.bed | $bedtools merge -c 4 -o first | sort -k1,1 -k2,2n > RMGen_merged.bed
-    echo "[$(printf '%(%F %T)T\n')][INFO] Making target TEs fasta"
-    $bedtools getfasta -fi $fasta_genome -bed RMGen_merged.bed -nameOnly -fo RM_intergenic.fa
-    $seqkit rmdup -s RM_intergenic.fa | $seqkit seq -m $kmer -g > tarTEs.fa
-echo -e "${green}[$(printf '%(%F %T)T\n')][INFO] $(grep -c '>' tarTEs.fa) target TEs found based in genome${reset}"
-fi
-echo "
-------------------------
-Building decoy sequences
-------------------------"
+    
+    python3 $RM2Bed --out_dir . --out_prefix RM_ovres --sort_criterion 'size' --ovlp_resolution $ovres $RM_genome $al
+    
+    echo "[$(printf '%(%F %T)T\n')][INFO] Removing short repeats (small RNAs, Satellites, Low complexity and Simple repeats, etc) from reference"
+    
+    grep -w -v "Unknown\\|rRNA\\|Satellite\\|Simple_repeat\\|Low_complexity\\|RNA\\|cRNA\\|snRNA\\|srpRNA\\|tRNA\\|Other" RM_ovres_rm.bed \
+    | awk -v OFS='\t' '{print $1, $2, $3, $1":"$2":"$3":"$4"/"$7"/"$8}' | sort -k1,1 -k2,2n > RMgen.bed
+    
+    else
+    
+    echo "[$(printf '%(%F %T)T\n')][INFO] Removing short repeats (small RNAs, Satellites, Low complexity and Simple repeats, etc) from reference"
+    
+    grep -w -v "Unknown\\|rRNA\\|Satellite\\|Simple_repeat\\|Low_complexity\\|RNA\\|cRNA\\|snRNA\\|srpRNA\\|tRNA\\|Other" $RM_genome \
+    | awk -v OFS='\t' 'NR>3 {print $5, $6, $7, $5":"$6":"$7":"$10"/"$11}' | sort -k1,1 -k2,2n > RMgen.bed
+    
+    fi
+    
+    if [[ -e $chrAl ]]; then
+    
+    echo "[$(printf '%(%F %T)T\n')][INFO] homogenizing chromosome names from chromosome alias file"
+    
+    awk '{print $1}' genome_len.bed > ChrNamGen.txt
+    awk '{print $1}' RMgen.bed | sort | uniq > ChrNamRM.txt
+    grep -v -w -f ChrNamRM.txt ChrNamGen.txt > NamesNoMatch.txt
+    grep -w -f NamesNoMatch.txt $chrAl | awk '{print $2, $1}' > chromAlias_noMatch.txt
+    cat RMgen.bed | sed -f <(printf 's/%s/%s/g\n' $(<chromAlias_noMatch.txt)) > RM_gen.bed
+    mv RM_gen.bed RMgen.bed
+    rm *.txt
+        
+    fi
+    
+    echo -e "[$(printf '%(%F %T)T\n')][INFO] Making references.csv file"
+    
+    $bedtools merge -c 4 -o first -i RMgen.bed | sort -k1,1 -k2,2n > RMgen_merged.bed
+    
+    awk '{print $4}' RMgen.bed | awk -F":" -v OFS=";" '{print $1":"$2":"$3":"$4, $4}' > references.csv
 
-rm RM*
-cat genes.bed UTR.bed intron.bed exon.bed  | awk 'BEGIN{OFS="\t"} {print $1, $2, $3, "d_"$1$2$3}' | sort -k1,1 -k2,2n | $bedtools merge -c 4 -o first > pre_decoys.bed
-echo "[$(printf '%(%F %T)T\n')][INFO] Making decoys fasta"
-$bedtools getfasta -fi $fasta_genome -bed pre_decoys.bed -nameOnly -fo  pre_decoys.fa
-$seqkit rmdup -s pre_decoys.fa | $seqkit seq -m $kmer -g > decoys.fa
-rm pre_decoys.fa *.bed
-echo -e "[$(printf '%(%F %T)T\n')][INFO] ${green} $(grep -c '>' decoys.fa) decoys sequences generated ${reset}"
-echo "[$(printf '%(%F %T)T\n')][INFO] Making Salmon references"
-grep '>' decoys.fa | sed 's/>//g' > decoys.txt
-cat tarTEs.fa decoys.fa > trmeSalmon.fa
-rm tarTEs.fa decoys.fa
+    echo -e "[$(printf '%(%F %T)T\n')][INFO] Extract target sequences"
+
+    $bedtools getfasta -fi $fasta_genome -bed RMgen.bed -nameOnly -fo target1.fa
+   
+    echo -e "[$(printf '%(%F %T)T\n')][INFO] Removing duplicated and short sequences from target file"
+
+    $seqkit rmdup -s target1.fa | $seqkit seq -m $kmer -g > target.fa
+
+    rm target1.fa 
+    mv RMgen.bed references.bed
+    
+    echo -e "[$(printf '%(%F %T)T\n')][INFO] ${green}$(grep -c '>' target.fa) ${reset}target TEs found based in genome"
+
+    echo -e "[$(printf '%(%F %T)T\n')][INFO] Extract decoys reference"
+
+    $bedtools complement -i RMgen_merged.bed -g  genome_len.bed -L | sort -k1,1 -k2,2n | $bedtools merge \
+    | awk -v OFS='\t' '{print $1, $2, $3, "d_"$1"_"$2"_"$3}' > decoys.bed
+
+    $bedtools getfasta -fi $fasta_genome -bed decoys.bed -nameOnly -fo decoys1.fa
+
+    echo -e "[$(printf '%(%F %T)T\n')][INFO] Removing duplicated and short sequences from decoy file"
+
+    $seqkit rmdup -s decoys1.fa | $seqkit -is replace -p "n" -r "" | $seqkit seq -g -m $((2 * $kmer)) > decoys.fa
+
+    rm decoys1.fa RMgen_merged.bed genome_len.bed decoys.bed
+    
+    awk '/^>/ {print $0; next}' decoys.fa | sed 's/^>//g' > decoys.txt
+    
+    echo -e "[$(printf '%(%F %T)T\n')][INFO] ${green}$(wc -l decoys.txt | awk '{print $1}') ${reset}decoys sequences generated"
+    
+    echo "[$(printf '%(%F %T)T\n')][INFO] Making reference gentrome"
+
+    cat target.fa decoys.fa > trmeSalmon.fa
+    
+    rm decoys.fa target.fa 
+
+fi
 
 echo -e "${yellow}
 Indexing in Salmon
