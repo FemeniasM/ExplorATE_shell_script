@@ -13,9 +13,9 @@
 # RepeatMasker 4.1.0
 ######################################################################
 
-BLASTP_path=blastp
-HMMER_path=hmmscan
-RM_path=RepeatMasker
+BLASTP_path="blastp"
+HMMER_path="hmmscan"
+RM_path="RepeatMasker"
 threads=1
 kmer=31
 red=`tput setaf 1`
