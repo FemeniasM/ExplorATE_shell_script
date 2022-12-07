@@ -189,7 +189,7 @@ if { echo "$bedtools_ver"; echo "2.29.0"; } | sort --version-sort --check=silent
 fi
 
 if { echo "$salmon_ver"; echo "1.3.0"; } | sort --version-sort --check=silent; then
-    echo -e "${red}[$(printf '%(%F %T)T\n')][ERROR] ExplorATE requires bedtools version 1.4.0 or later. 
+    echo -e "${red}[$(printf '%(%F %T)T\n')][ERROR] ExplorATE requires salmon version 1.4.0 or later. 
     You are using Salmon version $salmon_ver ${reset}"
     print_usage && exit 1
 fi
