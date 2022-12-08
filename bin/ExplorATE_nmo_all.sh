@@ -20,7 +20,7 @@ HMMER_path=hmmscan
 RM_path=RepeatMasker
 threads=1
 kmer=31
-salmon_path=="salmon"
+salmon_path="salmon"
 bedtools="bedtools"
 seqkit=$(dirname "${BASH_SOURCE[0]}")/seqkit
 RM2Bed=$(dirname "${BASH_SOURCE[0]}")/RM2Bed.py
